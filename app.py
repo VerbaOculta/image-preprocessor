@@ -7,20 +7,20 @@ import io
 app = Flask(__name__)
 
 def preprocess_image(image_bytes):
-    image = Image.open(io.BytesIO(image_bytes)).convert('L')  # Convert to grayscale
+    image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
     image_np = np.array(image)
 
-    # Gaussian blur
-    blurred = cv2.GaussianBlur(image_np, (5, 5), 0)
+    # Convert to grayscale
+    gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
 
-    # Adaptive Thresholding
-    processed = cv2.adaptiveThreshold(
-        blurred, 255,
-        cv2.ADAPTIVE_THRESH_MEAN_C,
-        cv2.THRESH_BINARY,
-        11, 2
-    )
-    return processed
+    # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced = clahe.apply(gray)
+
+    # Optional: Slight denoising
+    denoised = cv2.fastNlMeansDenoising(enhanced, h=10)
+
+    return denoised
 
 @app.route('/preprocess', methods=['POST'])
 def preprocess():
