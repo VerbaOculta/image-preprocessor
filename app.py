@@ -10,17 +10,21 @@ def preprocess_image(image_bytes):
     image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
     image_np = np.array(image)
 
-    # Convert to grayscale
+    # Convertir a escala de grises
     gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
 
-    # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
+    # Ecualización adaptativa (CLAHE)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     enhanced = clahe.apply(gray)
 
-    # Optional: Slight denoising
+    # Denoising suave
     denoised = cv2.fastNlMeansDenoising(enhanced, h=10)
 
-    return denoised
+    # Aumentar contraste final con normalización
+    contrasted = cv2.normalize(denoised, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+
+    return contrasted
+
 
 @app.route('/preprocess', methods=['POST'])
 def preprocess():
